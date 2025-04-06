@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentaura - Dashboard</title>
+    <link rel="stylesheet" href="dash.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase Scripts - Updated versions for consistency -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
+</head>
+<body>
+    <!-- Script to handle direct access to dashboard -->
+    <script>
+        // First check if we're accessing the dashboard directly without auth
+        const checkAuth = function() {
+            // Check if user is logged in
+            const storedUser = localStorage.getItem('mentaura_user');
+            
+            if (!storedUser) {
+                console.log('No authentication found, redirecting to login page');
+                window.location.href = 'index.html?direct_access=true';
+                return false;
+            }
+            
+            return true;
+        };
+        
+        // Perform the check immediately
+        if (!checkAuth()) {
+            // Add event listener to prevent any content loading if auth check fails
+            document.addEventListener('DOMContentLoaded', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+    </script>
+    
+    <div class="glow"></div>
+    <div class="glow-secondary"></div>
+    
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <h1>Mentaura</h1>
+            </div>
+            <nav>
+                <ul class="nav-tabs">
+                    <li class="active" data-tab="home">Home</li>
+                    <li data-tab="learning">Learning</li>
+                    <li data-tab="fun-talks">Fun Talks</li>
+                    <li data-tab="games">Games</li>
+                    <li data-tab="customize">Customize AI</li>
+                </ul>
+            </nav>
+            <div class="profile-section">
+                <div class="profile-info">
+                    <span id="username">Guest</span>
+                    <span id="learning-type" class="learning-type-badge">Personal Growth</span>
+                </div>
+                <div class="profile-avatar" id="profile-avatar">
+                    <!-- Avatar image or initial will be inserted via JavaScript -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Home Tab Content -->
+            <div class="tab-content active" id="home-content">
+                <div class="ai-tutor-section">
+                    <div class="ai-tutor-header">
+                        <h2>Your Personal AI Tutor</h2>
+                        <p>Ask anything, learn everything</p>
+                    </div>
+                    
+                    <div class="conversation-container">
+                        <div class="conversation-messages" id="conversation-history">
+                            <!-- Conversation messages will be added here by JavaScript -->
+                        </div>
+                        
+                        <div class="input-container">
+                            <div class="input-options">
+                                <button class="option-btn" id="voice-input">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button class="option-btn" id="image-upload">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                            </div>
+                            <input type="text" id="user-input" placeholder="Ask your doubts or what you want to learn...">
+                            <button id="send-message">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <div class="action-card">
+                            <i class="fas fa-book"></i>
+                            <span>Continue Learning</span>
+                        </div>
+                        <div class="action-card">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Practice Questions</span>
+                        </div>
+                        <div class="action-card">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>New Topic</span>
+                        </div>
+                        <div class="action-card">
+                            <i class="fas fa-history"></i>
+                            <span>Learning History</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <h3>Your Learning Progress</h3>
+                    <div id="learning-progress-container" class="progress-cards">
+                        <div class="empty-state">
+                            <i class="fas fa-book-reader"></i>
+                            <p>Your learning progress will appear here once you start learning topics.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Learning Tab Content -->
+            <div class="tab-content" id="learning-content">
+                <div class="learning-header">
+                    <h2>Personalized Learning</h2>
+                    <div class="search-bar">
+                        <input type="text" placeholder="Search for topics, courses, materials...">
+                        <button><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                
+                <div class="learning-categories">
+                    <div class="category" id="books-category">
+                        <div class="category-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h3>Books</h3>
+                        <p>Comprehensive reading materials</p>
+                    </div>
+                    <div class="category" id="courses-category">
+                        <div class="category-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h3>Courses</h3>
+                        <p>Structured learning paths</p>
+                    </div>
+                    <div class="category" id="practice-category">
+                        <div class="category-icon">
+                            <i class="fas fa-pencil-alt"></i>
+                        </div>
+                        <h3>Practice</h3>
+                        <p>Interactive exercises</p>
+                    </div>
+                    <div class="category" id="topics-category">
+                        <div class="category-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <h3>Topics</h3>
+                        <p>Explore by subject</p>
+                    </div>
+                </div>
+                
+                <!-- Books Section -->
+                <div class="learning-section" id="books-section" style="display: none;">
+                    <div class="section-header">
+                        <h3>Learning Books</h3>
+                        <div class="section-actions">
+                            <button class="upload-btn" id="upload-book-btn"><i class="fas fa-upload"></i> Upload Book</button>
+                            <button class="web-search-btn" id="search-books-btn"><i class="fas fa-search"></i> Web Search</button>
+                        </div>
+                    </div>
+                    <div class="book-upload-container" style="display: none;">
+                        <h4>Upload a Book</h4>
+                        <p>Upload PDF, EPUB or other document formats to add to your personal library.</p>
+                        <div id="book-upload-form">
+                            <div class="form-group">
+                                <label for="book-title">Book Title</label>
+                                <input type="text" id="book-title" placeholder="Enter book title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="book-author">Author</label>
+                                <input type="text" id="book-author" placeholder="Enter author name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="book-category">Category</label>
+                                <select id="book-category" required>
+                                    <option value="">Select a category</option>
+                                    <option value="programming">Programming</option>
+                                    <option value="mathematics">Mathematics</option>
+                                    <option value="science">Science</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="book-file">Book File</label>
+                                <input type="file" id="book-file" accept=".pdf,.epub,.mobi,.jpg,.png,.jpeg" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="upload-book-btn-submit" class="primary-btn">Upload Book</button>
+                                <button type="button" class="secondary-btn" id="cancel-upload">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="book-search-container" style="display: none;">
+                        <h4>Search Books Online</h4>
+                        <p>Search for books available on the web to add to your library.</p>
+                        <div class="search-form">
+                            <input type="text" id="book-search-input" placeholder="Search by title, author, or subject">
+                            <button id="execute-book-search" class="primary-btn">Search</button>
+                        </div>
+                        <div id="book-search-results" class="book-results">
+                            <!-- Search results will be inserted here -->
+                        </div>
+                    </div>
+                    <div class="books-library">
+                        <h4>Your Library</h4>
+                        <div class="library-empty" id="library-empty">
+                            <i class="fas fa-books"></i>
+                            <p>Your library is empty. Upload books or search the web to add books to your library.</p>
+                        </div>
+                        <div class="books-grid" id="books-grid">
+                            <!-- Books will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Courses Section -->
+                <div class="learning-section" id="courses-section" style="display: none;">
+                    <div class="section-header">
+                        <h3>Structured Learning Paths</h3>
+                    </div>
+                    <div class="courses-container">
+                        <div class="course-card">
+                            <div class="course-icon">
+                                <i class="fas fa-laptop-code"></i>
+                            </div>
+                            <div class="course-info">
+                                <h4>Full Stack Development</h4>
+                                <p>Complete path from frontend to backend development</p>
+                                <div class="course-details">
+                                    <span><i class="fas fa-clock"></i> 16 weeks</span>
+                                    <span><i class="fas fa-signal"></i> Intermediate</span>
+                                </div>
+                                <button class="start-course-btn" data-course="fullstack">Start Learning</button>
+                            </div>
+                        </div>
+                        <div class="course-card">
+                            <div class="course-icon">
+                                <i class="fas fa-square-root-alt"></i>
+                            </div>
+                            <div class="course-info">
+                                <h4>Basic Mathematics</h4>
+                                <p>Essential mathematical concepts and problem-solving</p>
+                                <div class="course-details">
+                                    <span><i class="fas fa-clock"></i> 10 weeks</span>
+                                    <span><i class="fas fa-signal"></i> Beginner</span>
+                                </div>
+                                <button class="start-course-btn" data-course="math">Start Learning</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Learning Plan (Initially hidden) -->
+                    <div id="course-plan-container" style="display: none;">
+                        <div class="course-plan-header">
+                            <button class="back-btn" id="back-to-courses"><i class="fas fa-arrow-left"></i> Back to Courses</button>
+                            <h3 id="course-plan-title">Course Learning Plan</h3>
+                        </div>
+                        <div class="course-plan-content" id="course-plan-content">
+                            <!-- Course plan content will be dynamically inserted here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Practice Section -->
+                <div class="learning-section" id="practice-section" style="display: none;">
+                    <div class="section-header">
+                        <h3>Practice Questions</h3>
+                    </div>
+                    <div class="topics-container">
+                        <div class="subject-group">
+                            <h4>Programming</h4>
+                            <div class="topic-list">
+                                <div class="topic-item" data-topic="javascript">
+                                    <i class="fas fa-code"></i>
+                                    <span>JavaScript Basics</span>
+                                </div>
+                                <div class="topic-item" data-topic="python">
+                                    <i class="fab fa-python"></i>
+                                    <span>Python Programming</span>
+                                </div>
+                                <div class="topic-item" data-topic="html-css">
+                                    <i class="fas fa-laptop-code"></i>
+                                    <span>HTML & CSS</span>
+                                </div>
+                                <div class="topic-item" data-topic="algorithms">
+                                    <i class="fas fa-project-diagram"></i>
+                                    <span>Algorithms</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subject-group">
+                            <h4>Mathematics</h4>
+                            <div class="topic-list">
+                                <div class="topic-item" data-topic="algebra">
+                                    <i class="fas fa-square-root-alt"></i>
+                                    <span>Algebra</span>
+                                </div>
+                                <div class="topic-item" data-topic="calculus">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Calculus</span>
+                                </div>
+                                <div class="topic-item" data-topic="geometry">
+                                    <i class="fas fa-shapes"></i>
+                                    <span>Geometry</span>
+                                </div>
+                                <div class="topic-item" data-topic="statistics">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>Statistics</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="practice-content" id="practice-content">
+                        <div class="practice-empty">
+                            <i class="fas fa-pencil-alt"></i>
+                            <p>Select a topic to start practicing</p>
+                        </div>
+                        <!-- Practice content will be inserted here when a topic is selected -->
+                    </div>
+                </div>
+                
+                <!-- Topics Section -->
+                <div class="learning-section" id="topics-section" style="display: none;">
+                    <div class="section-header">
+                        <h3>Browse Topics</h3>
+                    </div>
+                    <div class="subjects-grid">
+                        <div class="subject-card">
+                            <div class="subject-icon">
+                                <i class="fas fa-laptop-code"></i>
+                            </div>
+                            <h4>Programming</h4>
+                            <ul class="subject-topics">
+                                <li>Web Development</li>
+                                <li>Mobile App Development</li>
+                                <li>Data Structures</li>
+                                <li>Algorithms</li>
+                                <li>Object-Oriented Programming</li>
+                            </ul>
+                            <button class="explore-btn">Explore</button>
+                        </div>
+                        <div class="subject-card">
+                            <div class="subject-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h4>Mathematics</h4>
+                            <ul class="subject-topics">
+                                <li>Algebra</li>
+                                <li>Calculus</li>
+                                <li>Geometry</li>
+                                <li>Statistics</li>
+                                <li>Number Theory</li>
+                            </ul>
+                            <button class="explore-btn">Explore</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recommended-resources">
+                    <h3>Recommended Resources</h3>
+                    <div id="recommended-resources-container" class="resource-cards">
+                        <div class="empty-state">
+                            <i class="fas fa-lightbulb"></i>
+                            <p>Resources will be recommended according to your learning progress.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fun Talks Tab Content -->
+            <div class="tab-content" id="fun-talks-content">
+                <div class="fun-talks-header">
+                    <h2>Fun Talks with Your AI Friend</h2>
+                    <p>Chat about anything, anytime!</p>
+                </div>
+                
+                <div class="fun-talks-container">
+                    <div class="topic-selection">
+                        <h3>Conversation Topics</h3>
+                        <div class="topic-cards">
+                            <div class="topic-card">
+                                <i class="fas fa-music"></i>
+                                <span>Music</span>
+                            </div>
+                            <div class="topic-card">
+                                <i class="fas fa-film"></i>
+                                <span>Movies</span>
+                            </div>
+                            <div class="topic-card">
+                                <i class="fas fa-gamepad"></i>
+                                <span>Gaming</span>
+                            </div>
+                            <div class="topic-card">
+                                <i class="fas fa-bicycle"></i>
+                                <span>Hobbies</span>
+                            </div>
+                            <div class="topic-card">
+                                <i class="fas fa-globe"></i>
+                                <span>Travel</span>
+                            </div>
+                            <div class="topic-card">
+                                <i class="fas fa-brain"></i>
+                                <span>Trivia</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="fun-chat">
+                        <div class="fun-chat-messages" id="fun-chat-history">
+                            <div class="message ai-message">
+                                <div class="avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-content">
+                                    <p>Hey there! What would you like to chat about today? I'm here to be your friend!</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-container">
+                            <input type="text" id="fun-chat-input" placeholder="Type your message...">
+                            <button id="send-fun-message">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Games Tab Content -->
+            <div class="tab-content" id="games-content">
+                <div class="games-header">
+                    <h2>Educational Games</h2>
+                    <p>Learn while having fun!</p>
+                </div>
+                
+                <div class="games-container">
+                    <div class="game-card" id="math-game">
+                        <div class="game-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="game-info">
+                            <h3>Math Challenge</h3>
+                            <p>Test your math skills with fun puzzles</p>
+                            <button class="play-btn" data-game="math-challenge">Play Now</button>
+                        </div>
+                    </div>
+                    <div class="game-card" id="word-game">
+                        <div class="game-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div class="game-info">
+                            <h3>Word Wizard</h3>
+                            <p>Expand your vocabulary through play</p>
+                            <button class="play-btn" data-game="word-wizard">Play Now</button>
+                        </div>
+                    </div>
+                    <div class="game-card" id="science-game">
+                        <div class="game-icon">
+                            <i class="fas fa-atom"></i>
+                        </div>
+                        <div class="game-info">
+                            <h3>Science Explorer</h3>
+                            <p>Discover scientific concepts through interactive experiments</p>
+                            <button class="play-btn" data-game="science-explorer">Play Now</button>
+                        </div>
+                    </div>
+                    <div class="game-card" id="quiz-game">
+                        <div class="game-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="game-info">
+                            <h3>Knowledge Quiz</h3>
+                            <p>Test your knowledge across various subjects</p>
+                            <button class="play-btn" data-game="knowledge-quiz">Play Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Game Play Area -->
+                <div id="game-play-area" style="display: none;">
+                    <div class="game-header">
+                        <button id="back-to-games" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Games</button>
+                        <h3 id="current-game-title">Game Title</h3>
+                    </div>
+                    <div id="game-container"></div>
+                </div>
+            </div>
+            
+            <!-- Customize AI Tab Content -->
+            <div class="tab-content" id="customize-content">
+                <div class="customize-header">
+                    <h2>Customize Your AI Tutor</h2>
+                    <p>Make your learning experience unique!</p>
+                </div>
+                
+                <div class="customize-options">
+                    <div class="customize-section">
+                        <h3>AI Voice</h3>
+                        <div class="voice-options">
+                            <div class="voice-option">
+                                <input type="radio" id="voice-male" name="voice" value="male">
+                                <label for="voice-male">Male</label>
+                            </div>
+                            <div class="voice-option">
+                                <input type="radio" id="voice-female" name="voice" value="female" checked>
+                                <label for="voice-female">Female</label>
+                            </div>
+                            <div class="voice-option">
+                                <input type="radio" id="voice-neutral" name="voice" value="neutral">
+                                <label for="voice-neutral">Neutral</label>
+                            </div>
+                        </div>
+                        <div class="voice-controls">
+                            <div class="control-group">
+                                <label>Speed</label>
+                                <input type="range" min="0.5" max="2" step="0.1" value="1" id="voice-speed">
+                            </div>
+                            <div class="control-group">
+                                <label>Pitch</label>
+                                <input type="range" min="0.5" max="2" step="0.1" value="1" id="voice-pitch">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="customize-section">
+                        <h3>Teaching Style</h3>
+                        <div class="style-options">
+                            <div class="style-option">
+                                <input type="radio" id="style-detailed" name="teaching-style" value="detailed" checked>
+                                <label for="style-detailed">Detailed Explanations</label>
+                            </div>
+                            <div class="style-option">
+                                <input type="radio" id="style-concise" name="teaching-style" value="concise">
+                                <label for="style-concise">Concise Explanations</label>
+                            </div>
+                            <div class="style-option">
+                                <input type="radio" id="style-interactive" name="teaching-style" value="interactive">
+                                <label for="style-interactive">Interactive Learning</label>
+                            </div>
+                            <div class="style-option">
+                                <input type="radio" id="style-socratic" name="teaching-style" value="socratic">
+                                <label for="style-socratic">Socratic Method</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="customize-section">
+                        <h3>Personality</h3>
+                        <div class="personality-options">
+                            <div class="personality-option">
+                                <input type="radio" id="personality-friendly" name="personality" value="friendly" checked>
+                                <label for="personality-friendly">Friendly & Encouraging</label>
+                            </div>
+                            <div class="personality-option">
+                                <input type="radio" id="personality-formal" name="personality" value="formal">
+                                <label for="personality-formal">Formal & Professional</label>
+                            </div>
+                            <div class="personality-option">
+                                <input type="radio" id="personality-humorous" name="personality" value="humorous">
+                                <label for="personality-humorous">Humorous & Playful</label>
+                            </div>
+                            <div class="personality-option">
+                                <input type="radio" id="personality-motivational" name="personality" value="motivational">
+                                <label for="personality-motivational">Motivational & Inspiring</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="customize-section">
+                        <h3>Difficulty Level</h3>
+                        <div class="difficulty-slider">
+                            <input type="range" min="1" max="5" value="3" id="difficulty-level">
+                            <div class="difficulty-labels">
+                                <span>Beginner</span>
+                                <span>Intermediate</span>
+                                <span>Advanced</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="save-preferences-btn">Save Preferences</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Dropdown menu outside of profile-avatar but in the document body for better positioning -->
+    <div class="dropdown-menu" id="profile-dropdown">
+        <div class="dropdown-item" id="view-profile">
+            <i class="fas fa-user"></i> View Profile
+        </div>
+        <div class="dropdown-item" id="settings">
+            <i class="fas fa-cog"></i> Settings
+        </div>
+        <div class="dropdown-item" id="logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </div>
+    </div>
+
+    <!-- Load Firebase initialization first -->
+    <script src="modal.js"></script>
+    <script src="backend/api_client.js"></script>
+    <script src="backend/integration.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
+</html>
